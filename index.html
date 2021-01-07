@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>where ISS</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+      integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+      crossorigin=""
+    ></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: darkgray;
+      }
+
+      #mapid {
+        height: 20rem;
+        width: 20rem;
+        display: block;
+        margin: 0 auto;
+      }
+
+      h1,
+      p {
+        text-align: center;
+      }
+
+      .curMap {
+        border: 1px solid #00000f;
+        height: 3rem;
+        width: 10rem;
+        display: block;
+        margin: 0 auto;
+        position: relative;
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Where is International Space Station</h1>
+    <p>Широта: <span id="lat"></span>&#176;<br /></p>
+    <p>Высота: <span id="lon"></span>&#176;</p>
+
+    <div id="mapid"></div>
+    <script>
+      //making a map and tiles
+      const mapIss = L.map("mapid").setView([0, 0], 1);
+      const attribution =
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+      const tilesUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      const tiles = L.tileLayer(tilesUrl, { attribution });
+      tiles.addTo(mapIss);
+      //,aking a marker with an custom icon
+      const issIcon = L.icon({
+        iconUrl: "iss200px.png",
+        iconSize: [80, 62],
+        iconAnchor: [25, 16],
+      });
+
+      const circle = L.circle([49.2246, 33.1128], 450000, {
+        color: "red",
+        fillColor: "#f03",
+        fillOpacity: 0.5,
+      }).addTo(mapIss);
+
+      const popup = L.popup()
+        .setLatLng([49.2246, 33.1128])
+        .setContent("I am Ukraine.")
+        .openOn(mapIss);
+
+      const marker = L.marker([0, 0], { icon: issIcon }).addTo(mapIss);
+      let firstTime = true;
+
+      function onMapClick(e) {
+        const createMapDir = document.createElement("div");
+        const directMap = document.querySelector(".curMap");
+
+        if (directMap) {
+          directMap.innerText = `${e.latlng}`;
+        } else {
+          createMapDir.classList.add("curMap");
+          createMapDir.innerText = `${e.latlng}`;
+          document.querySelector("h1").appendChild(createMapDir);
+        }
+      }
+
+      let popupe = L.popup();
+      function onMap(e) {
+        popupe
+          .setLatLng(e.latlng)
+          .setContent("You clicked the map at " + e.latlng.toString())
+          .openOn(mapIss);
+      }
+
+      mapIss.on("click", onMap);
+      mapIss.on("click", onMapClick);
+
+      const api_url = "https://api.wheretheiss.at/v1/satellites/25544";
+      async function getISS() {
+        const response = await fetch(api_url);
+        const data = await response.json();
+        const { latitude, longitude } = data;
+        const lon = document.querySelector("#lon");
+        const lat = document.querySelector("#lat");
+
+        marker.setLatLng([longitude, latitude]);
+
+        lon.innerText = `${longitude.toFixed(2)}`;
+        lat.innerText = `${latitude.toFixed(2)}`;
+      }
+      getISS();
+
+      setInterval(getISS, 1000);
+    </script>
+  </body>
+</html>
